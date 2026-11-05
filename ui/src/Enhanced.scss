@@ -1,0 +1,375 @@
+/*
+ * DIM ENHANCED — Netflix-inspired visual refresh
+ * This stylesheet intentionally overrides presentation only.
+ * Existing routes, API calls, playback, library scanning and authentication remain intact.
+ */
+
+:root {
+  --accentColor: #e50914 !important;
+  --accentLighterColor: #f6121d !important;
+  --accentTextColor: #ffffff !important;
+  --primaryColor: #090909 !important;
+  --secondaryColor: #171717 !important;
+  --tertiaryColor: #101010 !important;
+  --quaternaryColor: #242424 !important;
+  --quinaryColor: #303030 !important;
+  --senaryColor: #454545 !important;
+  --septenaryColor: #e50914 !important;
+  --primaryTextColor: #f5f5f5 !important;
+  --secondaryTextColor: #b3b3b3 !important;
+  --tertiaryTextColor: #8c8c8c !important;
+  --bannerPrimaryColor: #090909 !important;
+  --bannerSecondaryColor: #171717 !important;
+  --bannerPrimaryTextColor: #ffffff !important;
+  --bannerSecondaryTextColor: #e5e5e5 !important;
+  --bannerTertiaryTextColor: #d5d5d5 !important;
+  --bannerBottomBorderColor: #090909 !important;
+  --bannerOverlayShadow: rgba(0, 0, 0, 0.68) !important;
+  --modalPrimaryColor: #171717 !important;
+  --modalSecondaryColor: #242424 !important;
+  --modalTertiaryColor: #303030 !important;
+  --borderRadius: 8px;
+}
+
+html,
+body,
+#root {
+  background: #090909 !important;
+}
+
+body {
+  color: #f5f5f5;
+  background: #090909 !important;
+}
+
+main {
+  background: #090909;
+}
+
+.sidebar {
+  background: #101010 !important;
+  border-right: 1px solid #252525;
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+.sidebar .sectionsWrapper {
+  padding-top: 1.5em;
+  padding-bottom: 1.5em;
+}
+
+.sidebar h4 {
+  color: #8f8f8f !important;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.72rem;
+}
+
+.sidebar .list .item {
+  border-radius: 7px !important;
+}
+
+.sidebar .list .item.active {
+  background: rgba(229, 9, 20, 0.17) !important;
+  box-shadow: inset 3px 0 0 #e50914;
+}
+
+.sidebar .list .item.active p,
+.sidebar .list .item.active svg {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+.sidebar .list .item:hover:not(.active) {
+  background: #242424 !important;
+}
+
+.sidebar input,
+.sidebar .search input {
+  background: #242424 !important;
+  border: 1px solid #353535 !important;
+  border-radius: 6px !important;
+  color: #fff !important;
+}
+
+@media only screen and (min-width: 1080px) {
+  .sidebar {
+    width: 248px !important;
+  }
+
+  main,
+  main.shrunk {
+    margin-left: 248px !important;
+  }
+}
+
+.dashboard {
+  min-height: 100vh;
+  background: #090909;
+}
+
+.banner-wrapper {
+  background: #090909 !important;
+  border: 0 !important;
+}
+
+.banner {
+  position: relative;
+  min-height: min(68vh, 760px) !important;
+  padding: 56px clamp(28px, 5vw, 88px) 62px !important;
+  border: 0 !important;
+  grid-template-rows: 1fr auto !important;
+  grid-template-areas:
+    "info progressbar" !important;
+  align-items: end !important;
+}
+
+.banner .imageWrapper {
+  z-index: 0 !important;
+}
+
+.banner .imageWrapper .imageLoad img {
+  object-position: center 28% !important;
+  mask-image: none !important;
+}
+
+.banner .imageWrapper .imageLoad::after {
+  background:
+    linear-gradient(90deg, rgba(9, 9, 9, 0.98) 0%, rgba(9, 9, 9, 0.78) 34%, rgba(9, 9, 9, 0.18) 78%, rgba(9, 9, 9, 0.34) 100%),
+    linear-gradient(0deg, #090909 0%, rgba(9, 9, 9, 0.18) 46%, rgba(9, 9, 9, 0.12) 100%) !important;
+}
+
+.banner .extras {
+  display: none !important;
+}
+
+.banner .info {
+  position: relative;
+  z-index: 1;
+  max-width: min(560px, 62vw) !important;
+  align-self: end;
+  color: #fff !important;
+}
+
+.banner .info h1 {
+  font-size: clamp(2.25rem, 4.2vw, 4.4rem) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.035em;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.42);
+}
+
+.banner .info .description {
+  max-width: 52ch;
+  color: #e2e2e2 !important;
+  font-size: clamp(0.95rem, 1.1vw, 1.1rem);
+  line-height: 1.55;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+.banner .info .btn.icon {
+  border-radius: 5px !important;
+  background: rgba(109, 109, 110, 0.72) !important;
+  color: #fff !important;
+}
+
+.banner .info .btn.icon p {
+  background: #e50914 !important;
+  color: #fff !important;
+  padding: 0.72em 1.15em !important;
+  font-size: 0.98rem;
+}
+
+.banner .info .btn.icon:hover p {
+  background: #b80710 !important;
+}
+
+.banner .info .btn.icon svg {
+  fill: #fff !important;
+}
+
+.banner .bannerProgressBar {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 4px;
+}
+
+.card_list {
+  padding: 24px clamp(22px, 4vw, 68px) 52px !important;
+  gap: 2.1rem !important;
+  margin-top: -10px;
+}
+
+.card_list section {
+  min-width: 0;
+}
+
+.card_list .sectionHeader {
+  margin-bottom: 0.65rem !important;
+}
+
+.card_list .sectionHeader h1 {
+  color: #f5f5f5;
+  font-size: clamp(1.15rem, 1.5vw, 1.45rem);
+  font-family: "Roboto Bold", Arial, sans-serif;
+  text-transform: capitalize;
+  letter-spacing: -0.015em;
+}
+
+.card_list .sectionDesc {
+  color: #a6a6a6 !important;
+}
+
+.cards {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 14px !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 3px 18px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #454545 transparent;
+}
+
+.cards::-webkit-scrollbar {
+  height: 5px;
+}
+
+.cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cards::-webkit-scrollbar-thumb {
+  background: #454545;
+  border-radius: 10px;
+}
+
+.card-wrapper {
+  flex: 0 0 clamp(132px, 13vw, 190px);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.card-wrapper .card .cardImageWrapper {
+  position: relative;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 2 / 3;
+  border-radius: 7px !important;
+  overflow: hidden;
+  background: #202020 !important;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.28);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.card-wrapper .card .cardImageWrapper > .imageLoad {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.card-wrapper .card .cardImageWrapper img,
+.card-wrapper .card .cardImageWrapper .placeholder {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 7px !important;
+  object-fit: cover;
+}
+
+.card-wrapper:hover .card .cardImageWrapper {
+  transform: scale(1.045);
+  filter: brightness(1.08) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+.card-wrapper .card p {
+  color: #d2d2d2 !important;
+  font-family: "Roboto Regular", Arial, sans-serif !important;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  text-align: left !important;
+  margin-top: 0.55rem !important;
+}
+
+.card-wrapper .card .cardImageWrapper .progress .value {
+  background: #e50914 !important;
+}
+
+.card-popup-right .clipped,
+.card-popup-left .clipped {
+  background: #181818 !important;
+  border-color: #383838 !important;
+  border-radius: 8px !important;
+}
+
+button,
+.btn,
+input,
+select {
+  accent-color: #e50914;
+}
+
+.popupOverlay {
+  background: rgba(0, 0, 0, 0.78) !important;
+}
+
+@media (max-width: 900px) {
+  .banner {
+    min-height: 58vh !important;
+    padding: 38px 28px 44px !important;
+  }
+
+  .banner .info {
+    max-width: 80vw !important;
+  }
+
+  .card_list {
+    padding: 22px 22px 42px !important;
+  }
+
+  .card-wrapper {
+    flex-basis: 145px;
+  }
+}
+
+@media (max-width: 600px) {
+  .banner {
+    min-height: 52vh !important;
+    padding: 28px 18px 34px !important;
+    grid-template-areas: "info" !important;
+  }
+
+  .banner .info {
+    max-width: 100% !important;
+  }
+
+  .banner .info h1 {
+    font-size: 2rem !important;
+  }
+
+  .banner .bannerProgressBar {
+    display: none;
+  }
+
+  .card_list {
+    padding: 18px 16px 34px !important;
+    gap: 1.6rem !important;
+  }
+
+  .card-wrapper {
+    flex-basis: 126px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

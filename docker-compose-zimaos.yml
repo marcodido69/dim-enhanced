@@ -1,0 +1,16 @@
+services:
+  dim-enhanced:
+    image: ghcr.io/marcodido69/dim-enhanced:latest
+    container_name: dim-enhanced
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - /DATA/AppData/dim-enhanced/config:/opt/dim/config
+      - /media/1TBWD_1/Media/Movies:/media/movies:ro
+    # Intel VA-API. Si ZimaOS reporta que el dispositivo no existe,
+    # quitá este bloque y arrancá sin aceleración por hardware.
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      RUST_LOG: info

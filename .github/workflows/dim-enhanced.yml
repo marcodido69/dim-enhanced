@@ -1,0 +1,68 @@
+name: Build and publish Dim Enhanced
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Si se empujan varios commits seguidos, cancelamos el build anterior.
+concurrency:
+  group: dim-enhanced-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set lowercase image name
+        shell: bash
+        run: |
+          echo "IMAGE_NAME=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/dim-enhanced" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=$(echo '${{ github.repository }}' | cut -d/ -f2 | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Solo linux/amd64: es lo que usa ZimaOS y evita emular arm64 con QEMU
+      # (que multiplica por ~10 el tiempo de compilación de Rust).
+      - name: Build and publish image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # GHCR crea los paquetes como privados; intentamos hacerlo público para
+      # que ZimaOS pueda hacer `docker pull` sin autenticarse. Si el token no
+      # tiene permisos, no rompe el build: se cambia a mano en GitHub.
+      - name: Make package public (best effort)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS -X PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/user/packages/container/${{ env.PACKAGE_NAME }}" \
+            -d '{"visibility":"public"}'
