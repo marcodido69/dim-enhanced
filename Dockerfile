@@ -55,6 +55,10 @@ RUN rm -f rust-toolchain.toml
 COPY --from=web /ui/build ui/build
 ARG DATABASE_URL="sqlite://dim_dev.db"
 
+# Los build scripts de dim-core/dim-database/dim-web leen CARGO_TARGET_DIR, que
+# Cargo no define por sí solo: sin esto el build falla con un panic en build.rs.
+ENV CARGO_TARGET_DIR=/dim/target
+
 # Sometimes we may need to quickly build a test image
 ARG RUST_BUILD=release
 RUN if [ "$RUST_BUILD" = "debug" ]; then \
