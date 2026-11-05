@@ -63,6 +63,23 @@ pub fn enumerate_directory<T: AsRef<std::path::Path>>(path: T) -> io::Result<Vec
     Ok(dirs)
 }
 
+pub async fn get_root_directory_structure() -> Result<axum::response::Response, AuthError> {
+    cfg_if::cfg_if! {
+        if #[cfg(target_os = "windows")] {
+            let root = PathBuf::from("C:/");
+        } else {
+            let root = PathBuf::from("/");
+        }
+    }
+
+    Ok(axum::response::Json(
+        &spawn_blocking(move || enumerate_directory(root))
+            .await
+            .unwrap()?,
+    )
+    .into_response())
+}
+
 pub async fn get_directory_structure(
     path: Option<Path<String>>,
 ) -> Result<axum::response::Response, AuthError> {

@@ -219,16 +219,15 @@ pub async fn start_webserver(
 
     let router = axum::Router::new()
         .route("/api/v1/auth/whoami", get(routes::auth::whoami))
-        .route_layer(axum::middleware::from_fn_with_state(
-            conn.clone(),
-            verify_cookie_token,
-        ))
-        // --- End of routes authenticated by Axum middleware ---
         .merge(auth_routes(app.clone()))
         .merge(library_routes(app.clone()))
         .route("/api/v1/dashboard", get(routes::dashboard::dashboard))
         .route("/api/v1/dashboard/banner", get(routes::dashboard::banners))
         .route("/api/v1/search", get(routes::search::search))
+        .route(
+            "/api/v1/filebrowser",
+            get(routes::filebrowser::get_root_directory_structure),
+        )
         .route(
             "/api/v1/filebrowser/*path",
             get(routes::filebrowser::get_directory_structure),
@@ -273,6 +272,14 @@ pub async fn start_webserver(
         .route("/static/*path", get(routes::statik::dist_static))
         .route("/ws", get(ws_handler))
         .with_state(app)
+        // El middleware de auth se aplica a TODAS las rutas (las publicas se
+        // saltean dentro de `verify_cookie_token`). Antes solo cubria /whoami,
+        // por lo que cualquier handler que pidiera `Extension<User>` fallaba
+        // con "Missing request extension" (dashboard, invites, bibliotecas).
+        .layer(axum::middleware::from_fn_with_state(
+            conn.clone(),
+            verify_cookie_token,
+        ))
         .layer(tower_http::trace::TraceLayer::new_for_http())
         .layer({
             let cors = tower_http::cors::CorsLayer::new()

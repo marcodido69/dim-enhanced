@@ -32,6 +32,17 @@ Más capturas en `docs/design/enhanced/`.
   superficies `#141414`–`#242424`), variables de color y carrusel de posters.
 - `ui/src/EnhancedPages.scss` (**nuevo**): extiende el tema a auth, bibliotecas, media,
   búsqueda, preferencias, modales, dropdowns, hovercards y reproductor, con responsive.
+- **Fixes de backend** (necesarios para usar bibliotecas e invitaciones):
+  - `dim-web/src/middleware.rs` + `dim-web/src/lib.rs`: el middleware de
+    autenticación ahora cubre todas las rutas de la API. Antes solo protegía
+    `/api/v1/auth/whoami`, así que cualquier handler que pidiera `Extension<User>`
+    (dashboard, invites, bibliotecas, ajustes) fallaba con HTTP 500
+    “Missing request extension”. Login, registro y los segmentos DASH quedan
+    públicos.
+  - `dim-web/src/routes/filebrowser.rs` + `ui/src/api/v1/fileBrowser.ts`: nueva
+    ruta para listar la raíz del filesystem (`/api/v1/filebrowser`). Antes la raíz
+    caía en el fallback del SPA y el selector de carpetas mostraba
+    “Cannot load data”.
 - `ui/src/App.jsx`: importa la hoja de estilos nueva (único cambio de JSX).
 - **Mejoras de UX** (posteriores al primer deploy):
   - `Components/Sidebar/Libraries.jsx`: la sección **Libraries** y el botón `+` se
