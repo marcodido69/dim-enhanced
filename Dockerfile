@@ -1,18 +1,21 @@
-FROM node:18-bullseye AS web
+FROM node:22-bookworm AS web
 WORKDIR /ui
 COPY ui/package*.json ./
-RUN yarn install
+# Husky no debe intentar instalar hooks dentro de la imagen (no hay .git en /ui).
+ENV HUSKY=0
+RUN yarn install --network-timeout 600000
 COPY ui ./
 ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN yarn run build
 
-FROM debian:bullseye AS ffmpeg
+FROM debian:bookworm AS ffmpeg
 ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /static
 ARG TARGETPLATFORM
 RUN echo ${TARGETPLATFORM}
-RUN apt update && \
-    apt install -y --no-install-recommends wget unzip tar ca-certificates xz-utils
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget unzip tar ca-certificates xz-utils && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
     wget https://github.com/Dusk-Labs/ffmpeg-static/releases/download/ffmpeg-all-0.0.1/ffmpeg && \
@@ -20,29 +23,35 @@ RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
     ls -la . && \
     pwd \
     ; fi
-    
+
 RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
     wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz && \
     tar --strip-components 1 -xf ffmpeg-release-arm64-static.tar.xz \
     ; fi
-    
+
 RUN if [ "${TARGETPLATFORM}" = "linux/arm/v7" ]; then \
     wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-armhf-static.tar.xz && \
     tar --strip-components 1 -xf ffmpeg-release-armhf-static.tar.xz \
     ; fi
-    
+
 RUN chmod +x /static/ffmpeg && chmod +x /static/ffprobe
 
 
-FROM rust:bullseye AS dim
+FROM rust:bookworm AS dim
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     libva-dev \
     libva-drm2 \
     libva2 \
-    sqlite3
+    libsqlite3-dev \
+    sqlite3 \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /dim
 COPY . ./
+# Usamos el toolchain stable que trae la imagen; el archivo del repo haría que
+# rustup intente descargar otro toolchain dentro del build.
+RUN rm -f rust-toolchain.toml
 COPY --from=web /ui/build ui/build
 ARG DATABASE_URL="sqlite://dim_dev.db"
 
@@ -58,12 +67,12 @@ RUN if [ "$RUST_BUILD" = "release" ]; then \
         mv ./target/release/dim ./target/dim \
     ; fi
 
-FROM debian:bullseye
+FROM debian:bookworm
 ENV RUST_BACKTRACE=full
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     ca-certificates \
-    libfontconfig \
+    libfontconfig1 \
     libfribidi0 \
     libharfbuzz0b \
     libtheora0 \
