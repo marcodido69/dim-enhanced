@@ -3,6 +3,11 @@ name: Build and publish Dim Enhanced
 on:
   push:
     branches: [main, master]
+    # Cambios de documentacion o del compose no necesitan reconstruir la imagen.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "docker-compose*.yml"
   workflow_dispatch:
 
 # Si se empujan varios commits seguidos, cancelamos el build anterior.

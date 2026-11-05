@@ -3,6 +3,11 @@ services:
     image: ghcr.io/marcodido69/dim-enhanced:latest
     container_name: dim-enhanced
     restart: unless-stopped
+    # Fuerza a traer la ultima imagen cada vez que ZimaOS re-deploya la app
+    # (por ejemplo al tocar "Save" o "Update" en la app).
+    pull_policy: always
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
     ports:
       - "8000:8000"
     volumes:
@@ -14,3 +19,18 @@ services:
       - /dev/dri:/dev/dri
     environment:
       RUST_LOG: info
+
+  # Actualizacion automatica (opcional).
+  # Cada hora revisa GHCR y, si hay una imagen nueva, recrea solo el contenedor
+  # dim-enhanced conservando volumenes y configuracion.
+  # Si preferis actualizar a mano, borrá este servicio del compose.
+  dim-updater:
+    image: containrrr/watchtower:latest
+    container_name: dim-enhanced-updater
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: "3600"

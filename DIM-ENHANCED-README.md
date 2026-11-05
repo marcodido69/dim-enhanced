@@ -130,6 +130,43 @@ Después arrancá el contenedor de nuevo. Si la instancia está vacía (sin bibl
 ni progreso), la opción más limpia es respaldar y borrar `config/dim.db*` y volver a
 registrar la primera cuenta, que será `owner`.
 
+## Actualizar la app desde ZimaOS
+
+La imagen se publica siempre con el tag `latest`. Cómo actualizar depende de la
+versión de ZimaOS:
+
+1. **ZimaOS 1.7 o superior (custom apps):** el sistema dejó de comparar el digest
+   de las imágenes `:latest` y ahora solo mira la versión de la tienda, así que
+   puede que **no aparezca el badge de actualización**. Para traer la última
+   versión: **My Apps → Dim Enhanced → Manage / Settings → Save** sin cambiar nada.
+   Eso fuerza un `docker pull` y recrea el contenedor; el volumen de configuración
+   se conserva.
+2. **ZimaOS 1.5 / 1.6:** al usar `:latest`, el sistema detecta el cambio de digest
+   y muestra el botón **Update**. Al presionarlo se actualiza la app.
+3. **Actualización automática (recomendada):** el compose incluye un contenedor
+   **Watchtower** que revisa GHCR cada hora y recrea `dim-enhanced` cuando hay una
+   imagen nueva. Con esto no hace falta tocar nada en ZimaOS: las mejoras se
+   instalan solas. Para desactivarlo, eliminá el servicio `dim-updater` del compose.
+4. **Manual (SSH / terminal):**
+   ```bash
+   docker compose -f docker-compose-zimaos.yml pull
+   docker compose -f docker-compose-zimaos.yml up -d
+   ```
+
+El servicio `dim-enhanced` usa `pull_policy: always`, así que cualquier
+re-deploy (Save/Update) siempre baja la imagen más reciente.
+
+Notas:
+
+- No hace falta reinstalar la app ni borrar la configuración: los datos viven en
+  `/DATA/AppData/dim-enhanced/config`.
+- Si editás el compose desde la UI de ZimaOS, revisá que se conserven las rutas de
+  los volúmenes y `pull_policy`. Para editar stacks custom con más comodidad,
+  ZimaOS recomienda usar Dockge o Portainer.
+- Contexto del cambio en ZimaOS 1.7:
+  [hilo de la comunidad](https://community.zimaspace.com/t/app-updates-the-update-mechanism-is-a-step-back-in-v1-7-0/9150)
+  y [comportamiento del pull con Save](https://community.zimaspace.com/t/zimaos-lists-all-docker-containers-as-updateable/7534).
+
 ## Importante
 
 - Conservá tu contenedor y configuración actuales de Dim hasta probar esta imagen.
