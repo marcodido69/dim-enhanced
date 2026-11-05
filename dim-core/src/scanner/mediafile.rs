@@ -139,7 +139,11 @@ impl MediafileCreator {
         // and does its scheduling. If a user ever needs to obtain the metadata, we can request it
         // and patch it immediately. This would add a initial cost to the API call, but subsequent
         // API calls will be cheap.
-        let video_metadata = match FFProbeCtx::new(&FFPROBE_BIN).get_meta(&target_file).await {
+        // Para archivos `.strm` la fuente real es la URL que contiene el archivo;
+        // ffprobe sobre el .strm (texto plano) siempre falla.
+        let source = crate::utils::resolve_media_source(&target_file);
+
+        let video_metadata = match FFProbeCtx::new(&FFPROBE_BIN).get_meta(&source).await {
             Ok(x) => x,
             Err(error) => {
                 error!(?error, "Couldn't extract media information with ffprobe");

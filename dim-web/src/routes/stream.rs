@@ -84,6 +84,10 @@ pub async fn return_virtual_manifest(
 
     let target_file = media.target_file.clone();
 
+    // Para archivos `.strm` el archivo local solo guarda una URL: resolvemos la
+    // fuente real para ffprobe/ffmpeg.
+    let source = dim_core::utils::resolve_media_source(&target_file);
+
     // FIXME: When `fs::try_exists` gets stabilized we should use that as it will allow us to
     // detect if the user lacks permissions to access the file, etc.
     if !path::Path::new(&target_file).exists() {
@@ -91,7 +95,7 @@ pub async fn return_virtual_manifest(
     }
 
     let info = FFProbeCtx::new(dim_core::streaming::FFPROBE_BIN.as_ref())
-        .get_meta(target_file)
+        .get_meta(&source)
         .await
         .map_err(|_| dim_core::errors::StreamingErrors::FFProbeCtxFailed)?;
 
@@ -149,7 +153,7 @@ pub async fn try_create_dstream(
         .ok_or(dim_core::errors::StreamingErrors::FileIsCorrupt)?;
 
     let ctx = ProfileContext {
-        file: media.target_file.clone(),
+        file: dim_core::utils::resolve_media_source(&media.target_file),
         input_ctx: video_stream.clone().into(),
         output_ctx: OutputCtx {
             codec: "h264".into(),
@@ -254,7 +258,7 @@ pub async fn create_video(
             .min(quality.bitrate);
 
         let ctx = ProfileContext {
-            file: media.target_file.clone(),
+            file: dim_core::utils::resolve_media_source(&media.target_file),
             input_ctx: video_stream.clone().into(),
             output_ctx: OutputCtx {
                 codec: "h264".into(),
@@ -342,7 +346,7 @@ pub async fn create_audio(
             .unwrap_or(120_000);
 
         let ctx = ProfileContext {
-            file: media.target_file.clone(),
+            file: dim_core::utils::resolve_media_source(&media.target_file),
             input_ctx: stream.clone().into(),
             output_ctx: OutputCtx {
                 codec: "aac".into(),
@@ -410,7 +414,7 @@ pub async fn create_subtitles(
         };
 
         let ctx = ProfileContext {
-            file: media.target_file.clone(),
+            file: dim_core::utils::resolve_media_source(&media.target_file),
             input_ctx: stream.clone().into(),
             output_ctx: OutputCtx {
                 codec: output_codec.into(),

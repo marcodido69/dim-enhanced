@@ -436,3 +436,33 @@ pub fn lang_from_iso639(tag: &str) -> Option<&'static str> {
         .find(|x| x.v2b() == tag)
         .map(|x| x.name())
 }
+
+/// Resuelve la fuente real de un mediafile.
+///
+/// Para archivos `.strm` (formato usado por Kodi/Emby/Jellyfin) devuelve la URL
+/// de la primera linea que no sea vacia ni un comentario (`#`). Para cualquier
+/// otro archivo devuelve la ruta tal cual.
+pub fn resolve_media_source(path: impl AsRef<str>) -> String {
+    let path = path.as_ref();
+
+    let is_strm = std::path::Path::new(path)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("strm"))
+        .unwrap_or(false);
+
+    if !is_strm {
+        return path.to_string();
+    }
+
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|contents| {
+            contents
+                .lines()
+                .map(str::trim)
+                .find(|line| !line.is_empty() && !line.starts_with('#'))
+                .map(ToString::to_string)
+        })
+        .unwrap_or_else(|| path.to_string())
+}

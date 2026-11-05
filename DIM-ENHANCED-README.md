@@ -141,6 +141,33 @@ Después arrancá el contenedor de nuevo. Si la instancia está vacía (sin bibl
 ni progreso), la opción más limpia es respaldar y borrar `config/dim.db*` y volver a
 registrar la primera cuenta, que será `owner`.
 
+## Soporte de archivos `.strm`
+
+Los archivos `.strm` (formato usado por Kodi / Jellyfin / Emby) se reconocen como
+video y ahora se resuelve la URL que contienen:
+
+- El **escáner** lee la primera línea que no esté vacía y no empiece con `#`, y usa
+  esa URL para extraer metadata con ffprobe (antes probaba el `.strm` local, que es
+  texto plano, y fallaba).
+- El **reproductor** usa esa misma URL para ffprobe y para transcodificar (direct
+  play o transcoding), en lugar de intentar abrir el archivo `.strm` local.
+- La URL debe ser **http(s)** y accesible desde el contenedor (el ffmpeg incluido
+  soporta https).
+- Ejemplo de contenido de un `.strm`:
+  ```
+  https://ejemplo.com/peliculas/mi-pelicula.mp4
+  ```
+  Las líneas que empiezan con `#` (por ejemplo `#KODIPROP:`) se ignoran.
+
+Limitaciones:
+
+- No hay soporte para DRM ni para `plugin://` / protocolos propios de Kodi.
+- Los `.strm` que ya estaban indexados como corruptos no se re-procesan solos:
+  borrá y volvé a crear la biblioteca (los archivos no se tocan) para que el
+  escáner los vuelva a tomar con la nueva lógica.
+- Un playlist HLS (`.m3u8`) dentro del `.strm` puede funcionar mediante el
+  transcodificador, pero el comportamiento en streams en vivo puede variar.
+
 ## Actualizar la app desde ZimaOS
 
 La imagen se publica siempre con el tag `latest`. Cómo actualizar depende de la
