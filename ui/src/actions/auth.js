@@ -261,10 +261,21 @@ export const createNewInvite = () => async (dispatch, getState) => {
     const res = await fetch("/api/v1/auth/new_invite", config);
 
     if (res.status !== 200) {
-      return dispatch({
+      dispatch({
         type: CREATE_NEW_INVITE_ERR,
         payload: res.statusText,
       });
+
+      dispatch(
+        addNotification({
+          msg:
+            res.status === 401
+              ? "Only an account with the owner role can generate invite tokens."
+              : `Could not generate an invite token (HTTP ${res.status}).`,
+        })
+      );
+
+      return;
     }
 
     const payload = await res.json();

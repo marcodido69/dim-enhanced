@@ -58,19 +58,24 @@ function Libraries() {
     libs = items.map((props) => <Library {...props} key={props.id} />);
   }
 
-  if (libraries.items.length === 0) return null;
-
+  // La seccion se muestra siempre (incluso con 0 bibliotecas) para que el boton
+  // "+" quede accesible y se pueda crear la primera biblioteca desde el sidebar.
   return (
     <section className="libraries">
       <header>
         <h4>Libraries</h4>
         {user.info.roles?.includes("owner") && (
           <NewLibraryModal>
-            <button className="openNewLibrary">+</button>
+            <button className="openNewLibrary" title="Create a new library">
+              +
+            </button>
           </NewLibraryModal>
         )}
       </header>
       <div className="list">{libs}</div>
+      {fetched && items.length === 0 && (
+        <p className="noLibraries">No libraries yet</p>
+      )}
     </section>
   );
 }

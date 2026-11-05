@@ -1674,3 +1674,30 @@ main > .card_list .card-wrapper {
     font-size: 1.6em !important;
   }
 }
+
+/* ==========================================================================
+   Sidebar: crear biblioteca siempre visible + estado vacio
+   ========================================================================== */
+
+/* El boton "+" solo aparecia al hacer hover en la seccion, y la seccion entera
+   se ocultaba cuando no habia bibliotecas. Ahora se ve siempre. */
+.sidebar .libraries .openNewLibrary {
+  opacity: 1 !important;
+  cursor: pointer;
+}
+
+.sidebar .libraries .noLibraries {
+  margin: 0.35em 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--tertiaryTextColor);
+}
+
+/* ==========================================================================
+   Preferencias > Invites: aviso para cuentas que no son owner
+   ========================================================================== */
+
+.preferencesInvites .desc.warn {
+  color: #e50914 !important;
+  font-weight: 600;
+}

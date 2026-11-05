@@ -33,6 +33,15 @@ Más capturas en `docs/design/enhanced/`.
 - `ui/src/EnhancedPages.scss` (**nuevo**): extiende el tema a auth, bibliotecas, media,
   búsqueda, preferencias, modales, dropdowns, hovercards y reproductor, con responsive.
 - `ui/src/App.jsx`: importa la hoja de estilos nueva (único cambio de JSX).
+- **Mejoras de UX** (posteriores al primer deploy):
+  - `Components/Sidebar/Libraries.jsx`: la sección **Libraries** y el botón `+` se
+    muestran siempre, incluso con 0 bibliotecas (antes desaparecían y no había forma
+    de crear la primera biblioteca desde el sidebar).
+  - `Pages/Preferences/Invites/ManageInvites.jsx` + `actions/auth.js`: el botón de
+    generar invitación solo aparece para cuentas `owner` y, si el backend responde
+    401, ahora se muestra un aviso en lugar de fallar en silencio.
+  - `EnhancedPages.scss`: estilos para el `+` siempre visible, el estado "No
+    libraries yet" y el aviso de permisos.
 - `Dockerfile` **corregido para que vuelva a compilar**:
   - Debian 11 (bullseye) está EOL y sus paquetes apt ya no existen → imágenes base
     migradas a **Debian 12 (bookworm)**.
@@ -85,6 +94,41 @@ Notas:
 
 Si ZimaOS no tiene `/dev/dri` o la aceleración falla, quitá el bloque `devices:` y
 volvé a levantar el contenedor.
+
+## Roles: owner vs user (invitaciones y bibliotecas)
+
+Solo las cuentas con rol **owner** pueden generar invitaciones y crear bibliotecas,
+y únicamente el **primer usuario registrado** en una base de datos recibe ese rol.
+Quien entra con una invitación queda como `user`.
+
+Síntomas si tu cuenta no es `owner`:
+
+- "Generate a new token" no hace nada (la API responde **401**).
+- No aparece el `+` de *Libraries* ni el botón "Add library" del Dashboard.
+
+La base de datos vive en el volumen de configuración
+(`/DATA/AppData/dim-enhanced/config/dim.db`). Para revisar los roles, con el
+contenedor detenido:
+
+```bash
+docker compose -f docker-compose-zimaos.yml stop
+cp /DATA/AppData/dim-enhanced/config/dim.db /DATA/AppData/dim-enhanced/config/dim.db.bak
+docker run --rm -v /DATA/AppData/dim-enhanced/config:/config alpine:3 sh -c \
+  'apk add -q sqlite && sqlite3 /config/dim.db "select id,username,roles from users;"'
+docker compose -f docker-compose-zimaos.yml start
+```
+
+Los roles se guardan como JSON (`["owner"]` / `["user"]`). Para promover una cuenta,
+con el contenedor detenido y backup previo, abrí `config/dim.db` con cualquier cliente
+SQLite y ejecutá:
+
+```sql
+UPDATE users SET roles = '["owner"]' WHERE username = 'marco';
+```
+
+Después arrancá el contenedor de nuevo. Si la instancia está vacía (sin bibliotecas
+ni progreso), la opción más limpia es respaldar y borrar `config/dim.db*` y volver a
+registrar la primera cuenta, que será `owner`.
 
 ## Importante
 

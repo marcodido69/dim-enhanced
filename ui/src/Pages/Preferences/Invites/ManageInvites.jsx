@@ -17,9 +17,13 @@ function ManageInvites() {
     auth: store.auth,
   }));
 
+  const isOwner = user.info?.roles?.includes("owner");
+
   useEffect(() => {
+    if (!isOwner) return;
+
     dispatch(fetchInvites());
-  }, [auth.admin_exists, dispatch]);
+  }, [auth.admin_exists, dispatch, isOwner]);
 
   const genNewToken = useCallback(async () => {
     await dispatch(createNewInvite());
@@ -86,6 +90,23 @@ function ManageInvites() {
         Create a token to invite someone and allow them access to your added
         media libraries securely.
       </p>
+      {!isOwner && (
+        <p className="desc warn">
+          Only an account with the owner role can create or manage invite
+          tokens.
+        </p>
+      )}
+      {auth.invites.error && (
+        <p className="desc warn">
+          Could not load invite tokens ({String(auth.invites.error)}). Try
+          logging in again.
+        </p>
+      )}
+      {auth.createNewInvite?.error && (
+        <p className="desc warn">
+          Could not generate a token ({String(auth.createNewInvite.error)}).
+        </p>
+      )}
       <h3>Tokens</h3>
       <div className="tokensContainer">
         <div className="heading">
@@ -96,9 +117,11 @@ function ManageInvites() {
         <div className="separator" />
         <div className="tokens">{tokens}</div>
       </div>
-      <button className="genTokenBtn" onClick={genNewToken}>
-        Generate a new token
-      </button>
+      {isOwner && (
+        <button className="genTokenBtn" onClick={genNewToken}>
+          Generate a new token
+        </button>
+      )}
     </section>
   );
 }
