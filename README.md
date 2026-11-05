@@ -1,4 +1,27 @@
-<h1 align="center">Dim</h1>
+<h1 align="center">Dim Enhanced</h1>
+
+> **Fork con tema Netflix.** Esta copia de Dim agrega un rediseño visual inspirado en
+> Netflix a la interfaz web y publica su propia imagen Docker en
+> `ghcr.io/marcodido69/dim-enhanced:latest`.
+>
+> Publicación de la imagen y despliegue en ZimaOS: **[DIM-ENHANCED-README.md](DIM-ENHANCED-README.md)**.
+
+![Dashboard con tema Netflix](docs/design/enhanced/02-dashboard.png)
+
+## Imagen de este fork
+
+```bash
+docker run -d -p 8000:8000/tcp \
+  -v $HOME/.config/dim:/opt/dim/config \
+  -v /media:/media:ro \
+  ghcr.io/marcodido69/dim-enhanced:latest
+```
+
+Si el paquete de GHCR está en privado, en GitHub entrá al paquete →
+**Package settings** → **Change visibility** → **Public** (o hacé `docker login ghcr.io`
+antes del pull).
+
+---
 
 ![Dashboard](docs/design/dashboard.jpg)
 [![Discord](https://img.shields.io/discord/834495310332035123)](https://discord.gg/gBPyQ7NVah)

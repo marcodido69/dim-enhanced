@@ -28,7 +28,11 @@
   --modalPrimaryColor: #171717 !important;
   --modalSecondaryColor: #242424 !important;
   --modalTertiaryColor: #303030 !important;
-  --borderRadius: 8px;
+  --criticalColor: #e50914 !important;
+  --criticalLighterColor: #b80710 !important;
+  --criticalTextColor: #ffffff !important;
+  --hoverCardWidth: 520px !important;
+  --borderRadius: 8px !important;
 }
 
 html,
@@ -218,7 +222,7 @@ main {
   color: #a6a6a6 !important;
 }
 
-.cards {
+.dashboard .cards {
   display: flex !important;
   flex-wrap: nowrap !important;
   gap: 14px !important;
@@ -230,20 +234,20 @@ main {
   scrollbar-color: #454545 transparent;
 }
 
-.cards::-webkit-scrollbar {
+.dashboard .cards::-webkit-scrollbar {
   height: 5px;
 }
 
-.cards::-webkit-scrollbar-track {
+.dashboard .cards::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.cards::-webkit-scrollbar-thumb {
+.dashboard .cards::-webkit-scrollbar-thumb {
   background: #454545;
   border-radius: 10px;
 }
 
-.card-wrapper {
+.dashboard .card-wrapper {
   flex: 0 0 clamp(132px, 13vw, 190px);
   min-width: 0;
   scroll-snap-align: start;
@@ -330,7 +334,7 @@ select {
     padding: 22px 22px 42px !important;
   }
 
-  .card-wrapper {
+  .dashboard .card-wrapper {
     flex-basis: 145px;
   }
 }
@@ -359,7 +363,7 @@ select {
     gap: 1.6rem !important;
   }
 
-  .card-wrapper {
+  .dashboard .card-wrapper {
     flex-basis: 126px;
   }
 }
@@ -373,3 +377,4 @@ select {
     transition-duration: 0.01ms !important;
   }
 }
+

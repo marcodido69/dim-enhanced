@@ -21,6 +21,7 @@ import Preferences from "./Pages/Preferences/Index";
 
 import "./App.scss";
 import "./Enhanced.scss";
+import "./EnhancedPages.scss";
 
 const routes = (
   <Switch>

@@ -1,42 +1,71 @@
-# Dim Enhanced — build para ZimaOS
+# Dim Enhanced — tema Netflix para Dim, build para ZimaOS
 
-Este fork agrega un rediseño visual inspirado en Netflix a la interfaz web de Dim
-(proyecto original: [Dusk-Labs/dim](https://github.com/Dusk-Labs/dim)). El cambio es
-de presentación: conserva las rutas, la API, el escaneo de biblioteca, la
-autenticación y el reproductor originales.
+Fork de [Dim](https://github.com/Dusk-Labs/dim) con un rediseño visual inspirado en
+Netflix aplicado a **toda la interfaz web**. El resto se mantiene igual: mismas rutas,
+API, escaneo de biblioteca, autenticación y reproductor.
 
 Repo: **https://github.com/marcodido69/dim-enhanced**
 Imagen: **ghcr.io/marcodido69/dim-enhanced:latest**
 
+![Dashboard](docs/design/enhanced/02-dashboard.png)
+
+## Interfaz
+
+El tema cubre todas las pantallas, no solo el dashboard:
+
+| Pantalla | Correctamente tematizada |
+| --- | --- |
+| Login / registro | panel centrado, acento rojo, inputs con foco |
+| Dashboard | banner grande, carruseles horizontales de posters |
+| Bibliotecas | grilla responsive de posters 2:3, hover, menú de acciones |
+| Detalle de media | poster + ficha, tarjetas de metadata, temporadas en carrusel, episodios 16:9 |
+| Búsqueda | grilla de resultados con el mismo estilo de cards |
+| Preferencias | navegación con indicador rojo, cards de sección, toggles e inputs |
+| Modales / dropdowns / hovercards | superficies oscuras, bordes y acentos consistentes |
+| Reproductor | seekbar fina roja, controles y menús con fondo difuminado |
+
+Más capturas en `docs/design/enhanced/`.
+
 ## Qué cambió en este fork
 
-- `ui/src/Enhanced.scss`: tema oscuro/cinematográfico, acento rojo, banner grande,
-  carruseles horizontales de posters y layout responsive.
-- El tema se carga desde `ui/src/App.jsx`.
-- `.github/workflows/dim-enhanced.yml`: construye y publica la imagen Docker en
-  GitHub Container Registry (GHCR) en cada push a `main`.
+- `ui/src/Enhanced.scss`: tema oscuro/cinematográfico (fondo `#090909`, acento `#e50914`,
+  superficies `#141414`–`#242424`), variables de color y carrusel de posters.
+- `ui/src/EnhancedPages.scss` (**nuevo**): extiende el tema a auth, bibliotecas, media,
+  búsqueda, preferencias, modales, dropdowns, hovercards y reproductor, con responsive.
+- `ui/src/App.jsx`: importa la hoja de estilos nueva (único cambio de JSX).
+- `Dockerfile` **corregido para que vuelva a compilar**:
+  - Debian 11 (bullseye) está EOL y sus paquetes apt ya no existen → imágenes base
+    migradas a **Debian 12 (bookworm)**.
+  - Stage de UI con **Node 22** (en lugar de 18) y `HUSKY=0`.
+  - Stage de Rust con el toolchain **stable actual**; se elimina `rust-toolchain.toml`
+    dentro de la imagen y se define `CARGO_TARGET_DIR` (lo leen los `build.rs`).
+  - Se agrega `libsqlite3-dev` y `pkg-config` a las dependencias del build.
+- `.github/workflows/dim-enhanced.yml`: construye y publica la imagen en GHCR en cada
+  push a `main` (linux/amd64, cache de Buildx, cancela builds viejos, intenta dejar el
+  paquete público). Los workflows heredados de Rust/React/docs quedan solo manuales.
 - `docker-compose-zimaos.yml`: compose listo para el equipo ZimaOS.
-- Los workflows heredados del upstream que no aplican (Rust, React, docs) quedan
-  solo con ejecución manual, para que no fallen ni consuman minutos en cada push.
 
 ## Cómo se publica la imagen
 
 1. Hacé push a `main` en https://github.com/marcodido69/dim-enhanced (o corré el
    workflow **Build and publish Dim Enhanced** a mano desde la pestaña Actions).
-2. Esperá a que el job `docker` termine. Tarda ~30–60 minutos la primera vez,
-   porque compila la UI y el backend Rust dentro de la imagen; las siguientes
-   corridas reutilizan la cache de Docker.
-3. La imagen generada es `ghcr.io/marcodido69/dim-enhanced:latest`.
+2. Esperá a que termine el job `docker`. La primera vez tarda ~20–40 minutos porque
+   compila la UI y el backend Rust dentro de la imagen; las siguientes corridas
+   reutilizan la cache de Docker.
+3. La imagen publicada es `ghcr.io/marcodido69/dim-enhanced:latest` (y también
+   `:commit-sha`).
 4. El workflow intenta dejar el paquete público automáticamente. Si no lo logra,
    entrá al paquete en GitHub → **Package settings** → **Change visibility** →
    **Public**. Es necesario para que ZimaOS pueda hacer `docker pull` sin login.
 
 Notas:
 
-- La imagen es **linux/amd64** (ZimaOS corre en x86). Si algún día necesitás arm64,
-  agregá `linux/amd64,linux/arm64` en `platforms:` del workflow, sabiendo que el
-  build tarda mucho más por la emulación.
+- La imagen es **linux/amd64** (ZimaOS corre en x86). Para sumar arm64, agregá
+  `linux/amd64,linux/arm64` en `platforms:` del workflow, sabiendo que el build tarda
+  mucho más por la emulación.
 - No se publican binarios sueltos: solo la imagen.
+- El tema fuerza siempre la paleta oscura; los temas Light/Blind de Preferencias no
+  cambian el aspecto (comportamiento intencional de este fork).
 
 ## Desplegar en ZimaOS
 
@@ -59,7 +88,6 @@ volvé a levantar el contenedor.
 
 ## Importante
 
-- El `Dockerfile` original y sus dependencias se mantienen intactos.
 - Conservá tu contenedor y configuración actuales de Dim hasta probar esta imagen.
-- El proyecto está bajo licencia AGPL-3.0 (`LICENSE.md`). Si distribuís la imagen,
-  el código fuente de estas modificaciones queda disponible en este mismo repo.
+- El proyecto está bajo licencia AGPL-3.0 (`LICENSE.md`). Si distribuís la imagen, el
+  código fuente de estas modificaciones queda disponible en este mismo repo.
