@@ -26,6 +26,9 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Test metadata parser
+        run: cargo test -p dim-extern-api filename -- --nocapture
+
       - name: Set lowercase image name
         shell: bash
         run: |

@@ -356,16 +356,47 @@ impl TvMatcher {
         metadata: Vec<Metadata>,
     ) -> Option<(MediaFile, (ExternalMedia, ExternalSeason, ExternalEpisode))> {
         for meta in metadata {
-            match provider
-                .search(meta.name.as_ref(), meta.year.map(|x| x as _))
-                .await
-            {
-                Ok(provided) => {
-                    let first = if let Some(x) = provided.first() {
-                        x.clone()
-                    } else {
+            let mut provided = Vec::new();
+
+            // 1) Id de TMDB embebido en el nombre: match directo del show.
+            if let Some(id) = meta.tmdb_id {
+                let id = id.to_string();
+
+                if let Ok(media) = provider.search_by_id(&id).await {
+                    provided.push(media);
+                }
+            }
+
+            // 2) Busqueda por nombre (reintento sin anio si no hubo resultados).
+            if provided.is_empty() {
+                match provider
+                    .search(meta.name.as_ref(), meta.year.map(|x| x as _))
+                    .await
+                {
+                    Ok(mut results) => {
+                        if results.is_empty() && meta.year.is_some() {
+                            results = provider
+                                .search(meta.name.as_ref(), None)
+                                .await
+                                .unwrap_or_default();
+                        }
+
+                        results.sort_by(|a, b| {
+                            super::match_score(&meta, b).cmp(&super::match_score(&meta, a))
+                        });
+
+                        provided = results;
+                    }
+                    Err(e) => {
+                        error!(?meta, error = ?e, "Failed to find a movie match.");
                         continue;
-                    };
+                    }
+                }
+            }
+
+            let Some(first) = provided.first().cloned() else {
+                continue;
+            };
 
                     let Ok(seasons) = provider.seasons_for_id(&first.external_id).await else {
                         info!(
@@ -409,9 +440,6 @@ impl TvMatcher {
                     };
 
                     return Some((file, (first, season, episode)));
-                }
-                Err(e) => error!(?meta, error = ?e, "Failed to find a movie match."),
-            }
         }
 
         None

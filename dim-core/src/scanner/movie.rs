@@ -226,14 +226,50 @@ impl MediaMatcher for MovieMatcher {
         let metadata_futs = work
             .into_iter()
             .map(|WorkUnit(file, metadata)| async {
+                // 1) Id de TMDB embebido en el nombre del archivo: match directo.
+                for meta in metadata.iter() {
+                    if let Some(id) = meta.tmdb_id {
+                        let id = id.to_string();
+
+                        match provider.search_by_id(&id).await {
+                            Ok(media) => return Some((file, vec![media])),
+                            Err(e) => {
+                                error!(?id, error = ?e, "Failed to find a movie by explicit tmdb id.")
+                            }
+                        }
+                    }
+                }
+
+                // 2) Busqueda por nombre, quedandonos con el mejor resultado.
                 for meta in metadata {
-                    match provider
+                    let mut provided = match provider
                         .search(meta.name.as_ref(), meta.year.map(|x| x as _))
                         .await
                     {
-                        Ok(provided) => return Some((file, provided)),
-                        Err(e) => error!(?meta, error = ?e, "Failed to find a movie match."),
+                        Ok(provided) => provided,
+                        Err(e) => {
+                            error!(?meta, error = ?e, "Failed to find a movie match.");
+                            continue;
+                        }
+                    };
+
+                    // Si el anio filtra de mas, reintentamos sin anio.
+                    if provided.is_empty() && meta.year.is_some() {
+                        provided = provider
+                            .search(meta.name.as_ref(), None)
+                            .await
+                            .unwrap_or_default();
                     }
+
+                    if provided.is_empty() {
+                        continue;
+                    }
+
+                    provided.sort_by(|a, b| {
+                        super::match_score(&meta, b).cmp(&super::match_score(&meta, a))
+                    });
+
+                    return Some((file, provided));
                 }
 
                 None

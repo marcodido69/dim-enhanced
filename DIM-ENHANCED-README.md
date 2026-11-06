@@ -141,6 +141,27 @@ Después arrancá el contenedor de nuevo. Si la instancia está vacía (sin bibl
 ni progreso), la opción más limpia es respaldar y borrar `config/dim.db*` y volver a
 registrar la primera cuenta, que será `owner`.
 
+## Metadata estilo Jellyfin
+
+Mejoras inspiradas en las convenciones de nombres de Jellyfin:
+
+- **Extractor `JellyfinExtractor`**: limpia tags de release (`1080p`, `WEB-DL`,
+  `x264`, `DTS`, etc.), corchetes, llaves y paréntesis; detecta el año de estreno y
+  temporada/episodio en varios formatos: `S01E02`, `S01E02E03` (toma el primero),
+  `1x02` y `Season 2 Episode 5`.
+- **IDs embebidos**: si el nombre incluye `{tmdb-12345}` / `[tmdbid-12345]` se hace
+  match directo contra TMDB, sin búsqueda por texto. Los IDs de IMDb
+  (`{imdb-tt1234567}`) se detectan, pero hoy se usa la búsqueda por título como
+  fallback (TMDB no expone búsqueda directa por IMDb en este cliente).
+- **Mejor selección de resultado**: en vez de quedarse con el primer resultado de
+  TMDB, se puntúa cada candidato por similitud de título y cercanía del año, y se
+  elige el mejor. Si la búsqueda con año no devuelve nada, se reintenta sin año.
+- **Más extensiones indexables**: se agregaron variantes que faltaban
+  (`m1v`, `m2p`, `m4p`, `mp4v`, `mpeg1`, `mpeg2`, `mpeg4`, `mpg2`, `mpg4`).
+
+Límites: esto no es un port de Jellyfin. No hay proveedores adicionales (TVDB,
+OMDb, MusicBrainz), ni soporte de música/libros, ni identificación por huella.
+
 ## Soporte de archivos `.strm`
 
 Los archivos `.strm` (formato usado por Kodi / Jellyfin / Emby) se reconocen como

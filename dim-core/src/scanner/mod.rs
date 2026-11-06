@@ -22,6 +22,7 @@ use dim_database::mediafile::MediaFile;
 use dim_extern_api::filename::Anitomy;
 use dim_extern_api::filename::CombinedExtractor;
 use dim_extern_api::filename::FilenameMetadata;
+use dim_extern_api::filename::JellyfinExtractor;
 use dim_extern_api::filename::Metadata;
 use dim_extern_api::filename::TorrentMetadata;
 use dim_extern_api::ExternalQueryIntoShow;
@@ -47,10 +48,10 @@ pub use error::Error;
 
 pub(super) static SUPPORTED_EXTS: &[&str] = &[
     "001", "3g2", "3gp", "amv", "asf", "asx", "avi", "bin", "bivx", "divx", "dv", "dvr-ms", "f4v",
-    "fli", "flv", "ifo", "img", "iso", "m2t", "m2ts", "m2v", "m4v", "mkv", "mk3d", "mov", "mp4",
-    "mpe", "mpeg", "mpg", "mts", "mxf", "nrg", "nsv", "nuv", "ogg", "ogm", "ogv", "pva", "qt",
-    "rec", "rm", "rmvb", "strm", "svq3", "tp", "ts", "ty", "viv", "vob", "vp3", "webm", "wmv",
-    "wtv", "xvid",
+    "fli", "flv", "ifo", "img", "iso", "m1v", "m2p", "m2t", "m2ts", "m2v", "m4p", "m4v", "mkv",
+    "mk3d", "mov", "mp4", "mp4v", "mpe", "mpeg", "mpeg1", "mpeg2", "mpeg4", "mpg", "mpg2", "mpg4",
+    "mts", "mxf", "nrg", "nsv", "nuv", "ogg", "ogm", "ogv", "pva", "qt", "rec", "rm", "rmvb",
+    "strm", "svq3", "tp", "ts", "ty", "viv", "vob", "vp3", "webm", "wmv", "wtv", "xvid",
 ];
 
 /// Function recursively walks the paths passed and returns all files in those directories.
@@ -107,6 +108,7 @@ pub fn parse_filenames(
             TorrentMetadata::from_str(&filename),
             Anitomy::from_str(&filename),
             CombinedExtractor::from_str(&filename),
+            JellyfinExtractor::from_str(&filename),
         ])
         .filter_map(|x| x)
         .collect::<Vec<_>>();
@@ -123,6 +125,27 @@ pub fn parse_filenames(
 }
 
 pub struct WorkUnit(pub MediaFile, pub Vec<Metadata>);
+
+/// Puntua que tan bien un resultado externo coincide con los metadatos del archivo.
+/// Combina similitud de titulo con cercania del anio de estreno.
+pub(super) fn match_score(metadata: &Metadata, media: &dim_extern_api::ExternalMedia) -> i64 {
+    let mut score = dim_extern_api::filename::title_similarity(&metadata.name, &media.title);
+
+    if let (Some(year), Some(date)) = (metadata.year, media.release_date) {
+        use chrono::Datelike;
+
+        let diff = (date.year() as i64 - year).abs();
+
+        score += match diff {
+            0 => 40,
+            1 => 20,
+            2..=3 => 5,
+            _ => -40,
+        };
+    }
+
+    score
+}
 
 /// Trait that must be implemented by a media matcher. Matchers are responsible for fetching their
 /// own external metadata but it is provided a metadata provider at initialization time.
