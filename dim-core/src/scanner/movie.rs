@@ -226,6 +226,16 @@ impl MediaMatcher for MovieMatcher {
         let metadata_futs = work
             .into_iter()
             .map(|WorkUnit(file, metadata)| async {
+                // 0) Id de IMDb embebido en el nombre: se resuelve via TMDB /find.
+                for meta in metadata.iter() {
+                    if let Some(imdb_id) = meta.imdb_id.as_ref() {
+                        match provider.search_by_imdb_id(imdb_id).await {
+                            Ok(media) => return Some((file, vec![media])),
+                            Err(e) => error!(?imdb_id, error = ?e, "Failed to resolve imdb id."),
+                        }
+                    }
+                }
+
                 // 1) Id de TMDB embebido en el nombre del archivo: match directo.
                 for meta in metadata.iter() {
                     if let Some(id) = meta.tmdb_id {

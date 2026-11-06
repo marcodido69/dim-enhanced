@@ -24,6 +24,7 @@ use governor::Quota;
 use governor::RateLimiter;
 
 use super::cache_control::{AbortOnDropHandle, CacheEviction, CacheKey, CacheMap, CacheValue};
+use super::raw_client::FindResponse;
 use super::raw_client::TMDBClient;
 use super::*;
 
@@ -345,6 +346,53 @@ impl TMDBMetadataProvider {
         Ok(details.into())
     }
 
+    /// Resuelve un id de IMDb (`tt1234567`) usando el endpoint `/find` de TMDB.
+    async fn search_by_imdb_id(
+        &self,
+        imdb_id: &str,
+        media_type: MediaSearchType,
+    ) -> QueryResult<ExternalMedia> {
+        let imdb_id = imdb_id.trim().to_lowercase();
+        let key = CacheKey::ById {
+            id: format!("imdb:{imdb_id}"),
+            ty: media_type,
+        };
+
+        let response_body = self
+            .coalesce_request(
+                &key,
+                |client| async move {
+                    client
+                        .find_by_external_id(media_type, &imdb_id)
+                        .await
+                        .map(|st| st.into())
+                },
+                CACHED_ITEM_TTL,
+            )
+            .await?;
+
+        let found = serde_json::from_str::<FindResponse>(&response_body).map_err(|error| {
+            Error::DeserializationError {
+                body: response_body,
+                error: format!("{error}"),
+            }
+        })?;
+
+        let media = match media_type {
+            MediaSearchType::Movie => found.movie_results,
+            MediaSearchType::Tv => found.tv_results,
+        }
+        .into_iter()
+        .flatten()
+        .next()
+        .ok_or_else(|| Error::NoResults {
+            query: imdb_id,
+            year: None,
+        })?;
+
+        Ok(media.into())
+    }
+
     async fn cast(
         &self,
         external_id: &str,
@@ -501,6 +549,13 @@ where
     #[instrument]
     async fn search_by_id(&self, external_id: &str) -> QueryResult<ExternalMedia> {
         self.provider.search_by_id(external_id, K::MEDIA_TYPE).await
+    }
+
+    #[instrument]
+    async fn search_by_imdb_id(&self, imdb_id: &str) -> QueryResult<ExternalMedia> {
+        self.provider
+            .search_by_imdb_id(imdb_id, K::MEDIA_TYPE)
+            .await
     }
 
     #[instrument]

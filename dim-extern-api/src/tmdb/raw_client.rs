@@ -17,6 +17,15 @@ pub struct SearchResponse {
     pub results: Vec<Option<TMDBMediaObject>>,
 }
 
+/// Respuesta de `/find/{external_id}?external_source=imdb_id`.
+#[derive(Deserialize, Clone, Debug, Default)]
+pub struct FindResponse {
+    #[serde(default)]
+    pub movie_results: Vec<Option<TMDBMediaObject>>,
+    #[serde(default)]
+    pub tv_results: Vec<Option<TMDBMediaObject>>,
+}
+
 #[derive(Deserialize, Clone, Debug, Default)]
 pub struct TMDBMediaObject {
     pub id: u64,
@@ -337,6 +346,22 @@ impl TMDBClient {
         ];
 
         self.make_request(args, format!("/{media_type}/{id}")).await
+    }
+
+    /// Resuelve un id externo (IMDb: `tt1234567`) a un objeto de TMDB.
+    pub async fn find_by_external_id(
+        &self,
+        _media_type: MediaSearchType,
+        external_id: &str,
+    ) -> Result<String, TMDBClientRequestError> {
+        let args = vec![
+            ("api_key", self.provider.api_key.as_ref()),
+            ("language", "en-US"),
+            ("external_source", "imdb_id"),
+        ];
+
+        self.make_request(args, format!("/find/{external_id}"))
+            .await
     }
 
     pub async fn get_actor(

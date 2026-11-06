@@ -367,7 +367,16 @@ impl TvMatcher {
                 }
             }
 
-            // 2) Busqueda por nombre (reintento sin anio si no hubo resultados).
+            // 2) Id de IMDb embebido: se resuelve via TMDB /find.
+            if provided.is_empty() {
+                if let Some(imdb_id) = meta.imdb_id.as_ref() {
+                    if let Ok(media) = provider.search_by_imdb_id(imdb_id).await {
+                        provided.push(media);
+                    }
+                }
+            }
+
+            // 3) Busqueda por nombre (reintento sin anio si no hubo resultados).
             if provided.is_empty() {
                 match provider
                     .search(meta.name.as_ref(), meta.year.map(|x| x as _))

@@ -151,8 +151,12 @@ Mejoras inspiradas en las convenciones de nombres de Jellyfin:
   `1x02` y `Season 2 Episode 5`.
 - **IDs embebidos**: si el nombre incluye `{tmdb-12345}` / `[tmdbid-12345]` se hace
   match directo contra TMDB, sin búsqueda por texto. Los IDs de IMDb
-  (`{imdb-tt1234567}`) se detectan, pero hoy se usa la búsqueda por título como
-  fallback (TMDB no expone búsqueda directa por IMDb en este cliente).
+  (`{imdb-tt1234567}`) se resuelven con el endpoint `/find` de TMDB, también sin
+  búsqueda por título.
+- **Rematch por ID**: en el diálogo **Rematch** hay un campo para pegar un id de
+  TMDB (numérico) o de IMDb (`tt…`) y matchear directo. El botón “Match” ahora usa
+  el endpoint correcto (`POST /api/v1/media/<id>/rematch`); antes apuntaba a una
+  ruta inexistente y fallaba.
 - **Mejor selección de resultado**: en vez de quedarse con el primer resultado de
   TMDB, se puntúa cada candidato por similitud de título y cercanía del año, y se
   elige el mejor. Si la búsqueda con año no devuelve nada, se reintenta sin año.
@@ -161,6 +165,8 @@ Mejoras inspiradas en las convenciones de nombres de Jellyfin:
 
 Límites: esto no es un port de Jellyfin. No hay proveedores adicionales (TVDB,
 OMDb, MusicBrainz), ni soporte de música/libros, ni identificación por huella.
+TVDB queda pendiente: su API v4 requiere una API key propia para autenticarse, así
+que se puede sumar como proveedor alternativo cuando esté disponible la clave.
 
 ## Soporte de archivos `.strm`
 

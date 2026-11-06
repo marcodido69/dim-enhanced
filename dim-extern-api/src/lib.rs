@@ -139,6 +139,14 @@ pub trait ExternalQuery: Debug + Send + Sync {
     /// Search by external id. This must return a singular `ExternalMedia` which has the id passed
     /// in.
     async fn search_by_id(&self, external_id: &str) -> Result<ExternalMedia>;
+    /// Search by an IMDb id (`tt1234567`). Providers that don't support it keep
+    /// the default implementation, which returns an error.
+    async fn search_by_imdb_id(&self, _imdb_id: &str) -> Result<ExternalMedia> {
+        Err(Error::RemoteApiError {
+            code: 501,
+            message: "IMDb lookup is not supported by this metadata provider".to_string(),
+        })
+    }
     /// Get all actors for a media by external id. Actors must be ordered in order of importance.
     async fn cast(&self, external_id: &str) -> Result<Vec<ExternalActor>>;
 }

@@ -77,6 +77,35 @@
     }
   }
 
+  .idMatch {
+    display: grid;
+    gap: 0.5em;
+
+    .desc {
+      margin: 0;
+      font-size: 0.9em;
+      color: var(--secondaryTextColor);
+    }
+
+    input {
+      font-size: 1em;
+      font-family: "Roboto Regular", Arial;
+      background: var(--modalSecondaryColor);
+      outline: none;
+      border: none;
+      border-radius: 5px;
+      padding: 0.8em 1em;
+      color: var(--primaryTextColor);
+      width: 100%;
+      height: 40px;
+
+      &:focus,
+      &:hover {
+        background: var(--modalTertiaryColor);
+      }
+    }
+  }
+
   .options {
     grid-area: options;
     align-self: flex-end;

@@ -558,13 +558,27 @@ pub async fn rematch_media_by_id(
 
     info!(?media_type, mediafiles = ?&mediafile_ids, "Rematching media");
 
-    provider
-        .search_by_id(&params.external_id)
-        .await
-        .map_err(|e| {
-            error!(?e, "Failed to search for tmdb_id when rematching.");
-            Error::ExternalSearchError(e.to_string())
-        })?;
+    // Resolvemos el id externo: acepta un id numerico de TMDB o un id de IMDb (tt...).
+    // Para IMDb se usa /find de TMDB y se guarda el id canonico resultante.
+    let raw_external_id = params.external_id.trim().to_lowercase();
+    let external_id_input = raw_external_id
+        .strip_prefix("imdb:")
+        .map(ToString::to_string)
+        .unwrap_or_else(|| raw_external_id.clone());
+
+    let is_imdb = external_id_input.starts_with("tt");
+
+    let provided = if is_imdb {
+        provider.search_by_imdb_id(&external_id_input).await
+    } else {
+        provider.search_by_id(&external_id_input).await
+    }
+    .map_err(|e| {
+        error!(?e, "Failed to resolve external id when rematching.");
+        Error::ExternalSearchError(e.to_string())
+    })?;
+
+    let external_id = provided.external_id.clone();
 
     drop(tx);
 
@@ -585,7 +599,7 @@ pub async fn rematch_media_by_id(
                 &mut tx,
                 provider.clone(),
                 WorkUnit(mediafile.clone(), metadata),
-                &params.external_id,
+                &external_id,
             )
             .await
             .map_err(|e| {

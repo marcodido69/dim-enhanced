@@ -29,11 +29,13 @@ function RematchMediaModal(props) {
   const [tmdbResults, setTmdbResults] = useState([]);
   const [mediaType, setMediaType] = useState("movie");
   const [tmdbID, setTmdbID] = useState();
+  const [externalID, setExternalID] = useState("");
   const [error, setError] = useState("");
   const [matching, setMatching] = useState(false);
 
   const clearData = useCallback(() => {
     setTmdbID();
+    setExternalID("");
     setTmdbResults([]);
     setError();
     setQuery();
@@ -61,24 +63,35 @@ function RematchMediaModal(props) {
   }, []);
 
   const rematch = useCallback(async () => {
-    if (!tmdbID || !mediaType) return;
+    // Acepta un id de TMDB (numerico) o de IMDb (tt...) escrito a mano,
+    // o el resultado seleccionado en la busqueda.
+    const targetID = externalID.trim() || tmdbID;
+
+    if (!targetID || !mediaType) return;
 
     setMatching(true);
+    setError("");
 
     const config = {
-      method: "PATCH",
+      method: "POST",
       headers: {
+        "Content-Type": "application/json",
         authorization: token,
       },
+      body: JSON.stringify({
+        external_id: String(targetID),
+        media_type: mediaType,
+      }),
     };
 
-    const req = await fetch(
-      `/api/v1/media/${id}/match?external_id=${tmdbID}&media_type=${mediaType}`,
-      config
-    );
+    const req = await fetch(`/api/v1/media/${id}/rematch`, config);
 
     if (req.status !== 200) {
-      setError(req.statusText);
+      const message = await req.text().catch(() => req.statusText);
+
+      setError(message || req.statusText);
+      setMatching(false);
+
       return;
     }
 
@@ -98,6 +111,7 @@ function RematchMediaModal(props) {
     setError,
     setMatching,
     tmdbID,
+    externalID,
     token,
     close,
   ]);
@@ -112,6 +126,8 @@ function RematchMediaModal(props) {
     tmdbID,
     setTmdbID,
   };
+
+  const hasTarget = Boolean(externalID.trim() || tmdbID);
 
   return (
     <RematchContext.Provider value={initialValue}>
@@ -133,6 +149,17 @@ function RematchMediaModal(props) {
               mediaType={mediaType}
               setMediaType={setMediaType}
             />
+            <div className="idMatch">
+              <p className="desc">
+                Or match directly with an ID: TMDB (numeric) or IMDb (tt...).
+              </p>
+              <input
+                value={externalID}
+                onChange={(e) => setExternalID(e.target.value)}
+                placeholder="603692 or tt1160419"
+                spellCheck={false}
+              />
+            </div>
             <div className="search-section">
               <Search />
             </div>
@@ -141,7 +168,7 @@ function RematchMediaModal(props) {
               <Button type="secondary" onClick={close}>
                 Nevermind
               </Button>
-              <Button onClick={rematch} disabled={matching || false}>
+              <Button onClick={rematch} disabled={matching || !hasTarget}>
                 Match
               </Button>
             </div>
